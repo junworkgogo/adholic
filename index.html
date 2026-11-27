@@ -73,6 +73,9 @@ section.grp{padding-top:44px}
 .addph:focus-within{outline:2px solid var(--fg);outline-offset:2px}
 .addph input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .addph.busy{pointer-events:none;opacity:.6}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.gal button{aspect-ratio:1;width:100%;padding:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:zoom-in;background:var(--soft)}
+.gal img{width:100%;height:100%;object-fit:cover;display:block}
 #lb{position:fixed;inset:0;z-index:40;background:rgb(0 0 0/.9);display:flex;align-items:center;justify-content:center;padding:max(60px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(52px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));touch-action:pan-y}
 #lbi{max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;user-select:none;-webkit-user-select:none}
 .lbb{position:absolute;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:rgb(255 255 255/.14);color:#fff;font-size:24px;line-height:1;cursor:pointer;display:grid;place-items:center}
@@ -129,7 +132,7 @@ footer{padding-block:56px 40px;font-size:12px;color:var(--sub)}
 <div id="ov" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
 <h3 id="mt">編輯成員</h3>
 <div class="f3" id="base"><label>姓名<input id="fn" autocomplete="off"></label><label>暱稱<input id="fk" autocomplete="off"></label><label>生日<input id="fb" placeholder="1994/6/23 或 ?/8/11" autocomplete="off"></label><label>分類<input id="fg" list="gl" placeholder="例：熒萫島" autocomplete="off"></label></div><datalist id="gl"></datalist>
-<div id="phw"><div class="lab">照片（最多 6 張，按右上 × 移除）</div><div class="phs" id="phs"></div></div>
+<div id="phw"><div class="lab" id="phl">照片（最多 6 張，按右上 × 移除）</div><div class="phs" id="phs"></div></div>
 <div class="lab" id="rl">喜好（沒填內容的項目不會存）</div>
 <div id="rows"></div>
 <button class="btn sm" id="addR" type="button">＋ 新增一項</button>
@@ -151,7 +154,7 @@ const row=(...c)=>{const r=el('tr');r.append(...c);return r};
 const cell=(...k)=>{const d=el('td');d.append(...k);return d};
 const md=b=>{const m=String(b||'').match(/^(\d{4}|\?)\/(\d{1,2})\/(\d{1,2})$/);return m?[+m[2],+m[3]]:null};
 const hasP=p=>Array.isArray(p.p)&&p.p.length>0;
-const MAXPH=6;
+const MAXPH=6,MAXOF=30,OFFICE='AD島';let phMax=MAXPH,office=[];
 const okImg=u=>typeof u==='string'&&/^data:image\/(jpeg|png|webp);base64,/.test(u);
 const phOf=p=>(Array.isArray(p.ph)?p.ph:[]).filter(x=>x&&x.i&&okImg(x.t));
 let phs=[],phDel=[];const bigCache=new Map();
@@ -189,6 +192,13 @@ function render(){
   const n=people.length,has=people.filter(hasP).length;
   $('stat').textContent=n?`共 ${n} 位生存者 · 已收到喜好 ${has} 位 · 尚未收到 ${n-has} 位`:'還沒有成員';
   const G=$('cards'),N=$('gnav');G.replaceChildren();N.replaceChildren();
+  /* AD島：辦公室環境照相簿，固定在所有島最上面，不算成員 */
+  {const of=phOf({ph:office}),sec=el('section','grp'),sh=el('div','sh'),h=el('h2',null,OFFICE),a=el('a',null,OFFICE);
+    sec.id='gad';h.append(el('span','cnt',of.length+' 張'));sh.append(h);
+    if(canW)sh.append(btn(of.length?'編輯照片':'＋ 加照片',openO));sec.append(sh);
+    if(of.length){const g=el('div','gal');of.forEach((x,i)=>{const b=el('button'),im=el('img');b.type='button';b.setAttribute('aria-label',`看 AD 辦公室第 ${i+1} 張照片`);im.src=x.t;im.alt='';im.loading='lazy';b.append(im);b.onclick=()=>openLb({n:OFFICE,ph:office},i);g.append(b)});sec.append(g)}
+    else sec.append(el('p','empty','還沒有辦公室照片'+(canW?'，按右邊「＋ 加照片」':'')));
+    G.append(sec);a.href='#gad';a.append(el('span',null,String(of.length)));N.append(a);}
   if(!n){G.append(el('p','msg',canW?'還沒有成員，按右上「＋ 新增成員」開始填':'還沒有成員'));return}
   const L=[...groups];people.forEach(p=>{if(p.g&&!L.includes(p.g))L.push(p.g)});
   const sets=L.map(g=>[g,people.filter(p=>p.g===g)]).filter(x=>x[1].length);
@@ -225,28 +235,30 @@ $('lb').onclick=e=>{if(e.target===$('lb'))closeLb()};
 $('lb').addEventListener('touchstart',e=>{lbX=e.touches[0].clientX},{passive:true});
 $('lb').addEventListener('touchend',e=>{if(lbX==null)return;const d=e.changedTouches[0].clientX-lbX;lbX=null;if(Math.abs(d)>50&&phOf(lbP||{}).length>1)showLb(lbI+(d<0?1:-1))});
 
-/* 編輯視窗的照片：選檔後在瀏覽器裡先縮小（大圖長邊 1600、小圖 160 正方形），按儲存才上傳 */
+/* 編輯視窗的照片：選檔後在瀏覽器裡先縮小（大圖長邊 1600、小圖正方形：成員 160、AD島 280），按儲存才上傳 */
 const newKey=()=>'f'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 function loadImg(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('decode'))};im.src=u})}
 function draw(im,sx,sy,sw,sh,w,h,q){const cv=document.createElement('canvas');cv.width=w;cv.height=h;const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);g.drawImage(im,sx,sy,sw,sh,0,0,w,h);return cv.toDataURL('image/jpeg',q)}
-async function shrink(file){
+async function shrink(file,ts){
   const im=await loadImg(file),W=im.naturalWidth,H=im.naturalHeight;if(!W||!H)throw new Error('size');
   let d='';for(const [m,q] of [[1600,.82],[1400,.72],[1100,.68]]){const s=Math.min(1,m/Math.max(W,H));d=draw(im,0,0,W,H,Math.round(W*s),Math.round(H*s),q);if(d.length<1800000)break}
   if(d.length>=1800000)throw new Error('big');
-  const s=Math.min(W,H);
-  return{t:draw(im,(W-s)/2,(H-s)/2,s,s,160,160,.72),d};
+  const s=Math.min(W,H);let t='';
+  for(const [z,q] of [[ts,.72],[ts,.6],[ts,.5],[Math.round(ts*.7),.5]]){t=draw(im,(W-s)/2,(H-s)/2,s,s,z,z,q);if(t.length<58000)break}
+  if(t.length>=58000)throw new Error('big');
+  return{t,d};
 }
 function renderPhs(){
   const w=$('phs');w.replaceChildren();
   phs.forEach((x,i)=>{const t=el('div','pt'),im=el('img'),b=el('button','x2','×');im.src=x.t;im.alt='';b.type='button';b.setAttribute('aria-label',`移除第 ${i+1} 張照片`);b.onclick=()=>{if(!x.isNew)phDel.push(x.i);phs.splice(i,1);renderPhs()};t.append(im,b);w.append(t)});
-  if(phs.length<MAXPH){
+  if(phs.length<phMax){
     const l=el('label','addph'),inp=el('input');inp.type='file';inp.accept='image/*';inp.multiple=true;inp.setAttribute('aria-label','加照片');
     inp.onchange=async()=>{
       const fs=[...inp.files],arr=phs;if(!fs.length)return;
       l.classList.add('busy');l.firstChild.textContent='處理中…';$('save').disabled=true;let bad=0,over=0;
-      for(const f of fs){if(arr.length>=MAXPH){over++;continue}try{const r=await shrink(f);arr.push({i:newKey(),t:r.t,d:r.d,isNew:true})}catch(e){bad++}}
+      for(const f of fs){if(arr.length>=phMax){over++;continue}try{const r=await shrink(f,mode==='o'?280:160);arr.push({i:newKey(),t:r.t,d:r.d,isNew:true})}catch(e){bad++}}
       if(phs!==arr)return;
-      $('err').textContent=[bad?`有 ${bad} 張照片讀不到，請換成 JPG 或 PNG 再試`:'',over?`每人最多 ${MAXPH} 張，多的 ${over} 張沒有加入`:''].filter(Boolean).join('；');
+      $('err').textContent=[bad?`有 ${bad} 張照片讀不到，請換成 JPG 或 PNG 再試`:'',over?`最多 ${phMax} 張，多的 ${over} 張沒有加入`:''].filter(Boolean).join('；');
       $('save').disabled=false;renderPhs();
     };
     l.append(document.createTextNode('＋ 加照片'),inp);w.append(l);
@@ -263,11 +275,18 @@ function addRow(k='',v=''){
 const fit=t=>{t.style.height='auto';t.style.height=(t.scrollHeight+2)+'px'};
 function openBox(){delArm=false;$('del').textContent='刪除成員';$('err').textContent='';$('save').disabled=false;$('save').textContent='儲存';$('ov').hidden=false;$('rows').querySelectorAll('textarea').forEach(fit);(mode==='p'?$('fn'):$('rows').querySelector('input'))?.focus()}
 function openP(p){
-  mode='p';cur=p||null;$('mt').textContent=p?'編輯成員':'新增成員';$('base').hidden=false;$('rl').textContent='喜好（沒填內容的項目不會存）';
+  mode='p';cur=p||null;$('mt').textContent=p?'編輯成員':'新增成員';$('base').hidden=$('rl').hidden=$('rows').hidden=$('addR').hidden=false;$('rl').textContent='喜好（沒填內容的項目不會存）';
+  phMax=MAXPH;$('phl').textContent=`照片（最多 ${MAXPH} 張，按右上 × 移除）`;
   $('fn').value=p?.n||'';$('fk').value=p?.k||'';$('fb').value=p?.b||'';$('fg').value=p?.g||'';$('gl').replaceChildren(...groups.map(g=>{const o=el('option');o.value=g;return o}));$('rows').replaceChildren();
   (p&&hasP(p)?p.p:STD.map(k=>({k,v:''}))).forEach(x=>addRow(x.k,x.v));$('del').hidden=!p;
   phs=(p?phOf(p):[]).map(x=>({i:x.i,t:x.t}));phDel=[];$('phw').hidden=false;renderPhs();openBox();
 }
+function openO(){
+  mode='o';cur=null;$('mt').textContent=OFFICE+' 辦公室照片';$('base').hidden=$('rl').hidden=$('rows').hidden=$('addR').hidden=$('del').hidden=true;$('rows').replaceChildren();
+  phMax=MAXOF;$('phl').textContent=`照片（最多 ${MAXOF} 張，按右上 × 移除）`;
+  phs=phOf({ph:office}).map(x=>({i:x.i,t:x.t}));phDel=[];$('phw').hidden=false;renderPhs();openBox();
+}
+async function uploadNew(owner){for(const x of phs.filter(x=>x.isNew&&!x.up)){$('save').textContent='上傳照片中…';await db.doc('photos/'+x.i).set({d:x.d,p:owner});x.up=true}}
 const closeBox=()=>{$('ov').hidden=true};
 $('cancel').onclick=closeBox;
 $('ov').onclick=e=>{if(e.target===$('ov'))closeBox()};
@@ -289,12 +308,17 @@ $('save').onclick=async()=>{
     if(phs.length)body.ph=phs.map(x=>({i:x.i,t:x.t}));
     ref=db.doc('people/'+id);
     $('save').disabled=true;
-    try{for(const x of phs.filter(x=>x.isNew&&!x.up)){$('save').textContent='上傳照片中…';await db.doc('photos/'+x.i).set({d:x.d,p:id});x.up=true}}
+    try{await uploadNew(id)}
+    catch(e){$('err').textContent='照片沒上傳成功（'+(e?.code||'錯誤')+'），請再按一次儲存';$('save').disabled=false;$('save').textContent='儲存';return}
+  }else if(mode==='o'){
+    body=phs.length?{ph:phs.map(x=>({i:x.i,t:x.t}))}:null;ref=db.doc('office');
+    $('save').disabled=true;
+    try{await uploadNew('office')}
     catch(e){$('err').textContent='照片沒上傳成功（'+(e?.code||'錯誤')+'），請再按一次儲存';$('save').disabled=false;$('save').textContent='儲存';return}
   }else{body={items};ref=db.doc('meta/common')}
   $('save').disabled=true;$('save').textContent='儲存中…';
   try{await ref.set(body);if(mode==='p'&&body.g&&!groups.includes(body.g))await db.doc('meta/groups').set({items:[...groups,body.g]});
-    if(mode==='p'&&phDel.length){const ks=phDel;phDel=[];await Promise.all(ks.map(k=>db.doc('photos/'+k).delete().catch(()=>{})))}
+    if((mode==='p'||mode==='o')&&phDel.length){const ks=phDel;phDel=[];await Promise.all(ks.map(k=>db.doc('photos/'+k).delete().catch(()=>{})))}
     closeBox();toast('已儲存')}
   catch(e){$('err').textContent='沒存成功（'+(e?.code||'錯誤')+'），請再按一次儲存';$('save').disabled=false;$('save').textContent='儲存'}
 };
@@ -325,6 +349,7 @@ function fbAdapter(root){
   const tmr=setTimeout(()=>msg('資料還在讀取，網路可能比較慢'),10000);
   db.collection('people').orderBy('o').onSnapshot(s=>{clearTimeout(tmr);msg('');people=s.docs.map(d=>({id:d.id,...d.data()}));loaded=true;render()},e=>{clearTimeout(tmr);msg('名冊讀取失敗（'+e.code+'），請重新整理')});
   db.doc('meta/groups').onSnapshot(s=>{groups=(s.exists&&s.data().items)||[];render()},()=>{});
+  db.doc('office').onSnapshot(s=>{const v=s.exists&&s.data();office=(v&&Array.isArray(v.ph))?v.ph:[];render()},()=>{});
 })();
 </script>
 </body>
