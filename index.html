@@ -59,6 +59,30 @@ section.grp{padding-top:44px}
 .kv tr:last-child>*{border-bottom:0}
 .kv tbody tr:hover{background:none}
 .pic{width:140px;border-radius:6px;display:block}
+/* 照片：卡片小圖 56px、點開全螢幕看大圖；編輯視窗 64px 可移除 */
+.th{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 10px}
+.th button{width:56px;height:56px;padding:0;border:1px solid var(--line);border-radius:7px;overflow:hidden;cursor:zoom-in;background:var(--soft)}
+.th img,.pt img{width:100%;height:100%;object-fit:cover;display:block}
+.phs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.pt{position:relative;width:64px;height:64px;border:1px solid var(--line);border-radius:7px;background:var(--soft)}
+.pt img{border-radius:6px}
+.pt .x2{position:absolute;top:-7px;right:-7px;width:22px;height:22px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--bg);color:var(--sub);font-size:14px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.pt .x2:hover{color:var(--bad)}
+.addph{position:relative;width:64px;height:64px;border:1px dashed #cfcfd4;border-radius:7px;display:grid;place-items:center;font-size:12px;color:var(--sub);cursor:pointer;text-align:center;line-height:1.35}
+.addph:hover{background:var(--soft);color:var(--fg)}
+.addph:focus-within{outline:2px solid var(--fg);outline-offset:2px}
+.addph input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.addph.busy{pointer-events:none;opacity:.6}
+#lb{position:fixed;inset:0;z-index:40;background:rgb(0 0 0/.9);display:flex;align-items:center;justify-content:center;padding:max(60px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(52px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));touch-action:pan-y}
+#lbi{max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;user-select:none;-webkit-user-select:none}
+.lbb{position:absolute;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:rgb(255 255 255/.14);color:#fff;font-size:24px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.lbb:hover{background:rgb(255 255 255/.26)}
+#lbx{top:max(10px,env(safe-area-inset-top,0px));right:max(10px,env(safe-area-inset-right,0px))}
+#lbp,#lbn{top:50%;transform:translateY(-50%)}
+#lbp{left:max(10px,env(safe-area-inset-left,0px))}
+#lbn{right:max(10px,env(safe-area-inset-right,0px))}
+#lbc{position:absolute;left:0;right:0;bottom:max(16px,env(safe-area-inset-bottom,0px));text-align:center;color:rgb(255 255 255/.8);font-size:13px;pointer-events:none}
+#lbl{position:absolute;left:0;right:0;top:max(22px,env(safe-area-inset-top,0px));text-align:center;color:rgb(255 255 255/.7);font-size:12px;pointer-events:none}
 button{font:inherit;color:inherit}
 .btn{height:32px;padding:0 12px;border-radius:7px;border:1px solid var(--line);background:var(--bg);font-size:13px;cursor:pointer;white-space:nowrap}
 .btn:hover{background:var(--soft)}
@@ -105,6 +129,7 @@ footer{padding-block:56px 40px;font-size:12px;color:var(--sub)}
 <div id="ov" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
 <h3 id="mt">編輯成員</h3>
 <div class="f3" id="base"><label>姓名<input id="fn" autocomplete="off"></label><label>暱稱<input id="fk" autocomplete="off"></label><label>生日<input id="fb" placeholder="1994/6/23 或 ?/8/11" autocomplete="off"></label><label>分類<input id="fg" list="gl" placeholder="例：熒萫島" autocomplete="off"></label></div><datalist id="gl"></datalist>
+<div id="phw"><div class="lab">照片（最多 6 張，按右上 × 移除）</div><div class="phs" id="phs"></div></div>
 <div class="lab" id="rl">喜好（沒填內容的項目不會存）</div>
 <div id="rows"></div>
 <button class="btn sm" id="addR" type="button">＋ 新增一項</button>
@@ -112,6 +137,7 @@ footer{padding-block:56px 40px;font-size:12px;color:var(--sub)}
 <p class="err" id="err"></p>
 <div class="act"><button class="btn bad" id="del" type="button">刪除成員</button><span class="sp"></span><button class="btn" id="cancel" type="button">取消</button><button class="btn pri" id="save" type="button">儲存</button></div>
 </div></div>
+<div id="lb" hidden role="dialog" aria-modal="true" aria-label="照片"><img id="lbi" alt=""><p id="lbl"></p><p id="lbc"></p><button class="lbb" id="lbp" type="button" aria-label="上一張">‹</button><button class="lbb" id="lbn" type="button" aria-label="下一張">›</button><button class="lbb" id="lbx" type="button" aria-label="關閉">×</button></div>
 
 <script>
 const FB_URL='https://adholic-roster-default-rtdb.asia-southeast1.firebasedatabase.app';
@@ -125,6 +151,10 @@ const row=(...c)=>{const r=el('tr');r.append(...c);return r};
 const cell=(...k)=>{const d=el('td');d.append(...k);return d};
 const md=b=>{const m=String(b||'').match(/^(\d{4}|\?)\/(\d{1,2})\/(\d{1,2})$/);return m?[+m[2],+m[3]]:null};
 const hasP=p=>Array.isArray(p.p)&&p.p.length>0;
+const MAXPH=6;
+const okImg=u=>typeof u==='string'&&/^data:image\/(jpeg|png|webp);base64,/.test(u);
+const phOf=p=>(Array.isArray(p.ph)?p.ph:[]).filter(x=>x&&x.i&&okImg(x.t));
+let phs=[],phDel=[];const bigCache=new Map();
 function toast(s){T.textContent=s;T.classList.add('on');clearTimeout(tm);tm=setTimeout(()=>T.classList.remove('on'),1400)}
 function copy(s,b){
   const done=()=>{b.classList.add('ok');b.innerHTML=CK;toast('已複製');setTimeout(()=>{b.classList.remove('ok');b.innerHTML=IC},1200)};
@@ -141,6 +171,12 @@ function card(p){
   h.append(C(p.n||''),s);hd.append(h);
   if(canW)hd.append(btn(hasP(p)?'編輯':'＋ 填寫',()=>openP(p)));
   c.append(hd);
+  const ph=phOf(p);
+  if(ph.length){
+    const w=el('div','th');
+    ph.forEach((x,i)=>{const b=el('button'),im=el('img');b.type='button';b.setAttribute('aria-label',`看 ${p.n||''} 的第 ${i+1} 張照片`);im.src=x.t;im.alt='';im.loading='lazy';b.append(im);b.onclick=()=>openLb(p,i);w.append(b)});
+    c.append(w);
+  }
   if(hasP(p)){
     const t=el('table','kv'),tb=el('tbody');
     p.p.forEach(x=>tb.append(row(el('th',null,x.k||''),cell(C(x.v||'')))));
@@ -165,6 +201,58 @@ function render(){
   });
 }
 
+/* 看大圖：先放小圖墊著，大圖讀到再換上；大圖只在點開時才下載 */
+let lbP=null,lbI=0,lbX=null;
+function openLb(p,i){lbP=p;$('lb').hidden=false;showLb(i);$('lbx').focus()}
+function closeLb(){$('lb').hidden=true;$('lbi').removeAttribute('src');lbP=null}
+async function showLb(i){
+  const ph=phOf(lbP);if(!ph.length)return closeLb();
+  lbI=(i+ph.length)%ph.length;const x=ph[lbI],im=$('lbi');
+  $('lbc').textContent=(lbP.n||'')+(ph.length>1?`　${lbI+1} / ${ph.length}`:'');
+  $('lbp').hidden=$('lbn').hidden=ph.length<2;
+  im.alt=`${lbP.n||''} 的照片`;
+  if(bigCache.has(x.i)){im.src=bigCache.get(x.i);$('lbl').textContent='';return}
+  im.src=x.t;$('lbl').textContent='大圖載入中…';
+  try{const v=await db.get('photos/'+x.i);const d=v&&v.d;
+    if(okImg(d)){bigCache.set(x.i,d);if(lbP&&phOf(lbP)[lbI]?.i===x.i){im.src=d;$('lbl').textContent=''}}
+    else if(lbP&&phOf(lbP)[lbI]?.i===x.i)$('lbl').textContent='找不到大圖，先顯示小圖';
+  }catch(e){if(lbP&&phOf(lbP)[lbI]?.i===x.i)$('lbl').textContent='大圖讀取失敗，先顯示小圖'}
+}
+$('lbx').onclick=closeLb;
+$('lbp').onclick=e=>{e.stopPropagation();showLb(lbI-1)};
+$('lbn').onclick=e=>{e.stopPropagation();showLb(lbI+1)};
+$('lb').onclick=e=>{if(e.target===$('lb'))closeLb()};
+$('lb').addEventListener('touchstart',e=>{lbX=e.touches[0].clientX},{passive:true});
+$('lb').addEventListener('touchend',e=>{if(lbX==null)return;const d=e.changedTouches[0].clientX-lbX;lbX=null;if(Math.abs(d)>50&&phOf(lbP||{}).length>1)showLb(lbI+(d<0?1:-1))});
+
+/* 編輯視窗的照片：選檔後在瀏覽器裡先縮小（大圖長邊 1600、小圖 160 正方形），按儲存才上傳 */
+const newKey=()=>'f'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function loadImg(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('decode'))};im.src=u})}
+function draw(im,sx,sy,sw,sh,w,h,q){const cv=document.createElement('canvas');cv.width=w;cv.height=h;const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);g.drawImage(im,sx,sy,sw,sh,0,0,w,h);return cv.toDataURL('image/jpeg',q)}
+async function shrink(file){
+  const im=await loadImg(file),W=im.naturalWidth,H=im.naturalHeight;if(!W||!H)throw new Error('size');
+  let d='';for(const [m,q] of [[1600,.82],[1400,.72],[1100,.68]]){const s=Math.min(1,m/Math.max(W,H));d=draw(im,0,0,W,H,Math.round(W*s),Math.round(H*s),q);if(d.length<1800000)break}
+  if(d.length>=1800000)throw new Error('big');
+  const s=Math.min(W,H);
+  return{t:draw(im,(W-s)/2,(H-s)/2,s,s,160,160,.72),d};
+}
+function renderPhs(){
+  const w=$('phs');w.replaceChildren();
+  phs.forEach((x,i)=>{const t=el('div','pt'),im=el('img'),b=el('button','x2','×');im.src=x.t;im.alt='';b.type='button';b.setAttribute('aria-label',`移除第 ${i+1} 張照片`);b.onclick=()=>{if(!x.isNew)phDel.push(x.i);phs.splice(i,1);renderPhs()};t.append(im,b);w.append(t)});
+  if(phs.length<MAXPH){
+    const l=el('label','addph'),inp=el('input');inp.type='file';inp.accept='image/*';inp.multiple=true;inp.setAttribute('aria-label','加照片');
+    inp.onchange=async()=>{
+      const fs=[...inp.files],arr=phs;if(!fs.length)return;
+      l.classList.add('busy');l.firstChild.textContent='處理中…';$('save').disabled=true;let bad=0,over=0;
+      for(const f of fs){if(arr.length>=MAXPH){over++;continue}try{const r=await shrink(f);arr.push({i:newKey(),t:r.t,d:r.d,isNew:true})}catch(e){bad++}}
+      if(phs!==arr)return;
+      $('err').textContent=[bad?`有 ${bad} 張照片讀不到，請換成 JPG 或 PNG 再試`:'',over?`每人最多 ${MAXPH} 張，多的 ${over} 張沒有加入`:''].filter(Boolean).join('；');
+      $('save').disabled=false;renderPhs();
+    };
+    l.append(document.createTextNode('＋ 加照片'),inp);w.append(l);
+  }
+}
+
 function addRow(k='',v=''){
   const r=el('div','row'),a=el('input'),b=el('textarea'),x=el('button','x','×');
   a.value=k;a.setAttribute('list','dl');a.placeholder='項目';a.setAttribute('aria-label','項目名稱');
@@ -177,12 +265,15 @@ function openBox(){delArm=false;$('del').textContent='刪除成員';$('err').tex
 function openP(p){
   mode='p';cur=p||null;$('mt').textContent=p?'編輯成員':'新增成員';$('base').hidden=false;$('rl').textContent='喜好（沒填內容的項目不會存）';
   $('fn').value=p?.n||'';$('fk').value=p?.k||'';$('fb').value=p?.b||'';$('fg').value=p?.g||'';$('gl').replaceChildren(...groups.map(g=>{const o=el('option');o.value=g;return o}));$('rows').replaceChildren();
-  (p&&hasP(p)?p.p:STD.map(k=>({k,v:''}))).forEach(x=>addRow(x.k,x.v));$('del').hidden=!p;openBox();
+  (p&&hasP(p)?p.p:STD.map(k=>({k,v:''}))).forEach(x=>addRow(x.k,x.v));$('del').hidden=!p;
+  phs=(p?phOf(p):[]).map(x=>({i:x.i,t:x.t}));phDel=[];$('phw').hidden=false;renderPhs();openBox();
 }
 const closeBox=()=>{$('ov').hidden=true};
 $('cancel').onclick=closeBox;
 $('ov').onclick=e=>{if(e.target===$('ov'))closeBox()};
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('ov').hidden)closeBox()});
+document.addEventListener('keydown',e=>{
+  if(!$('lb').hidden){if(e.key==='Escape')closeLb();else if(e.key==='ArrowLeft')showLb(lbI-1);else if(e.key==='ArrowRight')showLb(lbI+1);return}
+  if(e.key==='Escape'&&!$('ov').hidden)closeBox()});
 $('addR').onclick=()=>addRow();
 $('addP').onclick=()=>openP(null);
 const readRows=()=>[...$('rows').children].map(r=>({k:r.children[0].value.trim(),v:r.children[1].value.trim()})).filter(x=>x.v).map(x=>({k:x.k||'其他',v:x.v}));
@@ -195,16 +286,22 @@ $('save').onclick=async()=>{
     const id=cur?cur.id:'p'+Date.now().toString(36);
     const o=cur?cur.o:people.reduce((m,p)=>Math.max(m,p.o||0),0)+1;
     body={o,n,k:$('fk').value.trim(),b,g:$('fg').value.trim(),p:items};if(cur?.img)body.img=cur.img;
+    if(phs.length)body.ph=phs.map(x=>({i:x.i,t:x.t}));
     ref=db.doc('people/'+id);
+    $('save').disabled=true;
+    try{for(const x of phs.filter(x=>x.isNew&&!x.up)){$('save').textContent='上傳照片中…';await db.doc('photos/'+x.i).set({d:x.d,p:id});x.up=true}}
+    catch(e){$('err').textContent='照片沒上傳成功（'+(e?.code||'錯誤')+'），請再按一次儲存';$('save').disabled=false;$('save').textContent='儲存';return}
   }else{body={items};ref=db.doc('meta/common')}
   $('save').disabled=true;$('save').textContent='儲存中…';
-  try{await ref.set(body);if(mode==='p'&&body.g&&!groups.includes(body.g))await db.doc('meta/groups').set({items:[...groups,body.g]});closeBox();toast('已儲存')}
+  try{await ref.set(body);if(mode==='p'&&body.g&&!groups.includes(body.g))await db.doc('meta/groups').set({items:[...groups,body.g]});
+    if(mode==='p'&&phDel.length){const ks=phDel;phDel=[];await Promise.all(ks.map(k=>db.doc('photos/'+k).delete().catch(()=>{})))}
+    closeBox();toast('已儲存')}
   catch(e){$('err').textContent='沒存成功（'+(e?.code||'錯誤')+'），請再按一次儲存';$('save').disabled=false;$('save').textContent='儲存'}
 };
 $('del').onclick=async()=>{
   if(!delArm){delArm=true;$('del').textContent='再按一次就刪除';return}
   $('del').disabled=true;
-  try{await db.doc('people/'+cur.id).delete();closeBox();toast('已刪除')}
+  try{const ks=[...phOf(cur).map(x=>x.i),...phDel];await db.doc('people/'+cur.id).delete();await Promise.all(ks.map(k=>db.doc('photos/'+k).delete().catch(()=>{})));closeBox();toast('已刪除')}
   catch(e){$('err').textContent='沒刪成功（'+(e?.code||'錯誤')+'）'}
   finally{$('del').disabled=false}
 };
@@ -212,6 +309,7 @@ $('del').onclick=async()=>{
 function fbAdapter(root){
   const r=p=>root.child(p),E=err=>e=>err&&err({code:e&&e.code||'unavailable'});
   return{
+    get:p=>r(p).once('value').then(s=>s.val()),
     collection:c=>({orderBy:f=>({onSnapshot:(next,err)=>{
       const h=snap=>{const v=snap.val()||{};const docs=Object.keys(v).map(id=>({id,data:()=>v[id]})).sort((a,b)=>(a.data()[f]??1e9)-(b.data()[f]??1e9));next({docs,metadata:{fromCache:false}})};
       r(c).on('value',h,E(err));return()=>r(c).off('value',h)}})}),
