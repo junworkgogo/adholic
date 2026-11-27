@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>ADHOLIC 名冊</title>
+<style>
+/* 版面：單欄 880px、每人一張卡片；固定白底，深淺灰為主，不加強調色 */
+:root{--bg:#fff;--fg:#222;--sub:#88888e;--line:#ececee;--soft:#f6f6f7;--ok:#2f9e5b;--bad:#c4473a;color-scheme:light}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+h1,h2,h3,p{margin:0}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.7 -apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.in{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar{height:52px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo{font-size:13px;font-weight:600;letter-spacing:.24em}
+.hero{padding-block:48px 8px}
+.hero h1{font-size:26px;font-weight:600;text-wrap:balance}
+.hero p{margin-top:6px;font-size:13px;color:var(--sub)}
+section{padding-top:52px}
+.sh{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;min-height:32px}
+h2{font-size:12px;font-weight:500;letter-spacing:.2em;color:var(--sub)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;vertical-align:top;padding:10px 8px;border-bottom:1px solid var(--line)}
+thead th{font-size:12px;font-weight:500;color:var(--sub);border-bottom-color:var(--fg)}
+tbody th{font-size:13px;font-weight:500;color:var(--sub);white-space:nowrap}
+tbody tr:hover{background:var(--soft)}
+td{font-variant-numeric:tabular-nums}
+.c{display:inline-flex;align-items:flex-start;gap:2px;max-width:100%}
+.c>span{min-width:0;overflow-wrap:anywhere}
+.cp{flex:none;width:22px;height:22px;margin-top:1px;padding:0;border:0;border-radius:5px;background:none;color:var(--sub);cursor:pointer;display:grid;place-items:center;opacity:.55}
+.cp:hover,.cp:focus-visible{opacity:1;background:var(--line);color:var(--fg)}
+.cp svg{width:13px;height:13px}
+.cp.ok{opacity:1;color:var(--ok)}
+.sub{color:var(--sub)}
+.note{font-size:12px;color:var(--sub);margin-left:4px}
+a.go{color:var(--fg);font-size:13px;text-underline-offset:3px}
+.chips{display:flex;flex-wrap:wrap;gap:2px 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:16px;align-items:start}
+.empty{font-size:13px;color:var(--sub);padding:2px 0 10px}
+.gnav{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.gnav a{font-size:12px;color:var(--fg);text-decoration:none;border:1px solid var(--line);border-radius:99px;padding:3px 11px}
+.gnav a:hover{background:var(--soft)}
+.gnav span{color:var(--sub);margin-left:5px}
+section.grp{padding-top:44px}
+.grp h2{font-size:15px;font-weight:600;letter-spacing:.06em;color:var(--fg)}
+.cnt{font-size:12px;font-weight:400;letter-spacing:0;color:var(--sub);margin-left:8px}
+.card{border:1px solid var(--line);border-radius:10px;padding:14px 16px 6px;min-width:0}
+.ch{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px}
+.card h3{display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px;font-size:16px;font-weight:600}
+.card h3 .sub{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:13px;font-weight:400}
+.kv th{width:92px;font-size:12px;padding-left:0}
+.kv td{padding-right:0}
+.kv tr:last-child>*{border-bottom:0}
+.kv tbody tr:hover{background:none}
+.pic{width:140px;border-radius:6px;display:block}
+button{font:inherit;color:inherit}
+.btn{height:32px;padding:0 12px;border-radius:7px;border:1px solid var(--line);background:var(--bg);font-size:13px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--soft)}
+.btn.pri{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn.pri:hover{opacity:.88}
+.btn.bad{color:var(--bad)}
+.btn.sm{height:28px;padding:0 10px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.msg{margin-top:20px;padding:12px 16px;border:1px dashed var(--line);border-radius:10px;color:var(--sub);font-size:13px}
+#t{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);background:var(--fg);color:var(--bg);font-size:13px;padding:6px 14px;border-radius:99px;opacity:0;transition:.2s;pointer-events:none;z-index:30}
+#t.on{opacity:1;transform:translate(-50%,0)}
+#ov{position:fixed;inset:0;z-index:20;background:rgb(0 0 0/.35);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.modal{background:var(--bg);border-radius:12px;width:100%;max-width:560px;max-height:100%;overflow:auto;padding:20px}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:14px}
+.f3{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+label{display:grid;gap:4px;font-size:12px;color:var(--sub)}
+input,textarea{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:6px 10px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:36px;line-height:1.5;overflow:hidden}
+input:focus,textarea:focus{outline:none;border-color:var(--fg)}
+.lab{font-size:12px;color:var(--sub);margin-bottom:6px}
+.row{display:grid;grid-template-columns:112px 1fr 28px;gap:8px;margin-bottom:8px;align-items:start}
+.x{width:28px;height:36px;padding:0;border:0;background:none;color:var(--sub);cursor:pointer;font-size:18px}
+.x:hover{color:var(--bad)}
+.act{display:flex;align-items:center;gap:8px;margin-top:18px;flex-wrap:wrap}
+.act .sp{flex:1}
+.err{color:var(--bad);font-size:12px;margin-top:8px;min-height:1em}
+footer{padding-block:56px 40px;font-size:12px;color:var(--sub)}
+@media (max-width:520px){.hero h1{font-size:22px}th,td{padding:9px 5px}.row{grid-template-columns:1fr 28px;gap:6px;margin-bottom:14px}.row input{grid-area:1/1}.row .x{grid-area:1/2}.row textarea{grid-area:2/1/3/3}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}#t{transition:none}}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<header><div class="in bar"><div class="logo">ADHOLIC</div><button class="btn sm" id="addP" type="button" hidden>＋ 新增成員</button></div></header>
+<main class="in">
+<div class="hero"><h1>ADHOLIC（AD）名冊</h1><p id="stat">讀取名冊中…</p><div id="msg" class="msg" hidden></div><nav class="gnav" id="gnav" aria-label="分類"></nav></div>
+<div id="cards"><p class="sub" style="padding-top:40px">讀取中…</p></div>
+<footer>知道這個網址的人都可以查看和修改這份名冊</footer>
+</main>
+<div id="t" role="status" aria-live="polite">已複製</div>
+<div id="ov" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+<h3 id="mt">編輯成員</h3>
+<div class="f3" id="base"><label>姓名<input id="fn" autocomplete="off"></label><label>暱稱<input id="fk" autocomplete="off"></label><label>生日<input id="fb" placeholder="1994/6/23 或 ?/8/11" autocomplete="off"></label><label>分類<input id="fg" list="gl" placeholder="例：熒萫島" autocomplete="off"></label></div><datalist id="gl"></datalist>
+<div class="lab" id="rl">喜好（沒填內容的項目不會存）</div>
+<div id="rows"></div>
+<button class="btn sm" id="addR" type="button">＋ 新增一項</button>
+<datalist id="dl"><option value="喜歡的食物"><option value="喜歡的穿搭"><option value="遊戲"><option value="喜歡的節目"><option value="其他情報"><option value="不吃"><option value="喜歡的國家"><option value="書"><option value="運動"><option value="音樂"><option value="電影"></datalist>
+<p class="err" id="err"></p>
+<div class="act"><button class="btn bad" id="del" type="button">刪除成員</button><span class="sp"></span><button class="btn" id="cancel" type="button">取消</button><button class="btn pri" id="save" type="button">儲存</button></div>
+</div></div>
+
+<script>
+const FB_URL='https://adholic-roster-default-rtdb.asia-southeast1.firebasedatabase.app';
+const IC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>';
+const CK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
+const STD=['喜歡的食物','喜歡的穿搭','遊戲','喜歡的節目','其他情報'];
+const $=id=>document.getElementById(id),T=$('t');
+let tm,db=null,canW=false,loaded=false,groups=[],people=[],common=[],mode=null,cur=null,delArm=false;
+const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e};
+const row=(...c)=>{const r=el('tr');r.append(...c);return r};
+const cell=(...k)=>{const d=el('td');d.append(...k);return d};
+const md=b=>{const m=String(b||'').match(/^(\d{4}|\?)\/(\d{1,2})\/(\d{1,2})$/);return m?[+m[2],+m[3]]:null};
+const hasP=p=>Array.isArray(p.p)&&p.p.length>0;
+function toast(s){T.textContent=s;T.classList.add('on');clearTimeout(tm);tm=setTimeout(()=>T.classList.remove('on'),1400)}
+function copy(s,b){
+  const done=()=>{b.classList.add('ok');b.innerHTML=CK;toast('已複製');setTimeout(()=>{b.classList.remove('ok');b.innerHTML=IC},1200)};
+  const fb=()=>{const a=el('textarea');a.value=s;a.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.append(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}a.remove();ok?done():toast('這裡無法自動複製，請長按文字自己複製')};
+  try{navigator.clipboard.writeText(s).then(done,fb)}catch(e){fb()}
+}
+function C(s){const w=el('span','c'),b=el('button','cp');b.type='button';b.title='複製';b.setAttribute('aria-label','複製 '+s);b.innerHTML=IC;b.onclick=()=>copy(s,b);w.append(el('span',null,s),b);return w}
+function btn(t,f){const b=el('button','btn sm',t);b.type='button';b.onclick=f;return b}
+
+function card(p){
+  const c=el('div','card'),hd=el('div','ch'),h=el('h3'),s=el('span','sub');
+  c.id='p-'+p.id;if(p.k)s.append(C(p.k));
+  if(p.b){s.append(C(p.b));if(p.b.startsWith('?'))s.append(el('span','note','年份未知'))}
+  h.append(C(p.n||''),s);hd.append(h);
+  if(canW)hd.append(btn(hasP(p)?'編輯':'＋ 填寫',()=>openP(p)));
+  c.append(hd);
+  if(hasP(p)){
+    const t=el('table','kv'),tb=el('tbody');
+    p.p.forEach(x=>tb.append(row(el('th',null,x.k||''),cell(C(x.v||'')))));
+    t.append(tb);c.append(t);
+  }else c.append(el('p','empty','還沒有喜好資料'));
+  return c;
+}
+function render(){
+  if(!loaded)return;
+  const n=people.length,has=people.filter(hasP).length;
+  $('stat').textContent=n?`共 ${n} 位生存者 · 已收到喜好 ${has} 位 · 尚未收到 ${n-has} 位`:'還沒有成員';
+  const G=$('cards'),N=$('gnav');G.replaceChildren();N.replaceChildren();
+  if(!n){G.append(el('p','msg',canW?'還沒有成員，按右上「＋ 新增成員」開始填':'還沒有成員'));return}
+  const L=[...groups];people.forEach(p=>{if(p.g&&!L.includes(p.g))L.push(p.g)});
+  const sets=L.map(g=>[g,people.filter(p=>p.g===g)]).filter(x=>x[1].length);
+  const none=people.filter(p=>!p.g);if(none.length)sets.push(['未分類',none]);
+  sets.forEach(([g,list],i)=>{
+    const sec=el('section','grp'),sh=el('div','sh'),h=el('h2',null,g),gr=el('div','grid'),a=el('a',null,g);
+    sec.id='g'+i;h.append(el('span','cnt',list.length+' 人'));sh.append(h);
+    list.forEach(p=>gr.append(card(p)));sec.append(sh,gr);G.append(sec);
+    a.href='#g'+i;a.append(el('span',null,String(list.length)));N.append(a);
+  });
+}
+
+function addRow(k='',v=''){
+  const r=el('div','row'),a=el('input'),b=el('textarea'),x=el('button','x','×');
+  a.value=k;a.setAttribute('list','dl');a.placeholder='項目';a.setAttribute('aria-label','項目名稱');
+  b.value=v;b.rows=1;b.placeholder='內容';b.setAttribute('aria-label','內容');
+  x.type='button';x.setAttribute('aria-label','移除這一項');x.onclick=()=>r.remove();b.oninput=()=>fit(b);
+  r.append(a,b,x);$('rows').append(r);fit(b);
+}
+const fit=t=>{t.style.height='auto';t.style.height=(t.scrollHeight+2)+'px'};
+function openBox(){delArm=false;$('del').textContent='刪除成員';$('err').textContent='';$('save').disabled=false;$('save').textContent='儲存';$('ov').hidden=false;$('rows').querySelectorAll('textarea').forEach(fit);(mode==='p'?$('fn'):$('rows').querySelector('input'))?.focus()}
+function openP(p){
+  mode='p';cur=p||null;$('mt').textContent=p?'編輯成員':'新增成員';$('base').hidden=false;$('rl').textContent='喜好（沒填內容的項目不會存）';
+  $('fn').value=p?.n||'';$('fk').value=p?.k||'';$('fb').value=p?.b||'';$('fg').value=p?.g||'';$('gl').replaceChildren(...groups.map(g=>{const o=el('option');o.value=g;return o}));$('rows').replaceChildren();
+  (p&&hasP(p)?p.p:STD.map(k=>({k,v:''}))).forEach(x=>addRow(x.k,x.v));$('del').hidden=!p;openBox();
+}
+const closeBox=()=>{$('ov').hidden=true};
+$('cancel').onclick=closeBox;
+$('ov').onclick=e=>{if(e.target===$('ov'))closeBox()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('ov').hidden)closeBox()});
+$('addR').onclick=()=>addRow();
+$('addP').onclick=()=>openP(null);
+const readRows=()=>[...$('rows').children].map(r=>({k:r.children[0].value.trim(),v:r.children[1].value.trim()})).filter(x=>x.v).map(x=>({k:x.k||'其他',v:x.v}));
+$('save').onclick=async()=>{
+  const items=readRows();let ref,body;
+  if(mode==='p'){
+    const n=$('fn').value.trim(),b=$('fb').value.trim().replace(/[／.\-]/g,'/').replace(/？/g,'?');
+    if(!n){$('err').textContent='請填姓名';return}
+    if(b&&!md(b)){$('err').textContent='生日請寫成 1994/6/23，年份不知道寫 ?/8/11';return}
+    const id=cur?cur.id:'p'+Date.now().toString(36);
+    const o=cur?cur.o:people.reduce((m,p)=>Math.max(m,p.o||0),0)+1;
+    body={o,n,k:$('fk').value.trim(),b,g:$('fg').value.trim(),p:items};if(cur?.img)body.img=cur.img;
+    ref=db.doc('people/'+id);
+  }else{body={items};ref=db.doc('meta/common')}
+  $('save').disabled=true;$('save').textContent='儲存中…';
+  try{await ref.set(body);if(mode==='p'&&body.g&&!groups.includes(body.g))await db.doc('meta/groups').set({items:[...groups,body.g]});closeBox();toast('已儲存')}
+  catch(e){$('err').textContent='沒存成功（'+(e?.code||'錯誤')+'），請再按一次儲存';$('save').disabled=false;$('save').textContent='儲存'}
+};
+$('del').onclick=async()=>{
+  if(!delArm){delArm=true;$('del').textContent='再按一次就刪除';return}
+  $('del').disabled=true;
+  try{await db.doc('people/'+cur.id).delete();closeBox();toast('已刪除')}
+  catch(e){$('err').textContent='沒刪成功（'+(e?.code||'錯誤')+'）'}
+  finally{$('del').disabled=false}
+};
+
+function fbAdapter(root){
+  const r=p=>root.child(p),E=err=>e=>err&&err({code:e&&e.code||'unavailable'});
+  return{
+    collection:c=>({orderBy:f=>({onSnapshot:(next,err)=>{
+      const h=snap=>{const v=snap.val()||{};const docs=Object.keys(v).map(id=>({id,data:()=>v[id]})).sort((a,b)=>(a.data()[f]??1e9)-(b.data()[f]??1e9));next({docs,metadata:{fromCache:false}})};
+      r(c).on('value',h,E(err));return()=>r(c).off('value',h)}})}),
+    doc:p=>({set:b=>r(p).set(b),delete:()=>r(p).remove(),onSnapshot:(next,err)=>{
+      const h=snap=>next({exists:snap.exists(),data:()=>snap.val()});r(p).on('value',h,E(err));return()=>r(p).off('value',h)}})
+  };
+}
+(()=>{
+  const msg=s=>{$('msg').textContent=s;$('msg').hidden=!s};
+  try{if(!firebase.apps.length)firebase.initializeApp({databaseURL:FB_URL});db=fbAdapter(firebase.database().ref('adholic'))}catch(e){db=null}
+  if(!db){$('stat').textContent='';$('cards').replaceChildren();msg('名冊資料庫連不上，請稍後重新整理');return}
+  canW=true;$('addP').hidden=false;
+  const tmr=setTimeout(()=>msg('資料還在讀取，網路可能比較慢'),10000);
+  db.collection('people').orderBy('o').onSnapshot(s=>{clearTimeout(tmr);msg('');people=s.docs.map(d=>({id:d.id,...d.data()}));loaded=true;render()},e=>{clearTimeout(tmr);msg('名冊讀取失敗（'+e.code+'），請重新整理')});
+  db.doc('meta/groups').onSnapshot(s=>{groups=(s.exists&&s.data().items)||[];render()},()=>{});
+})();
+</script>
+</body>
+</html>
